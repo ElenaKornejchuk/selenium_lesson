@@ -15,7 +15,7 @@ def pytest_addoption(parser):
         "--drivers", help="Drivers storage", default="/home/mikhail/Downloads/drivers"
     )
     parser.addoption(
-        "--base_url", help="Base application url", default="192.168.1.4:8081"
+        "--base_url", help="Base application url", default="192.168.1.81:8081"
     )
 
 
