@@ -1,10 +1,7 @@
 import random
-import time
-
 
 import pytest
-from selenium.common import TimeoutException
-from selenium.webdriver.common.action_chains import ActionChains
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -125,49 +122,24 @@ class TestsOpencart:
         products = WebDriverWait(browser, 10).until(
             EC.presence_of_all_elements_located((By.CLASS_NAME, "product-thumb"))
         )
+
         assert products, "No products found on the main page"
 
-        valid_products = []
-        for p in products:
-            try:
-                WebDriverWait(p, 10).until(
-                    EC.presence_of_element_located(
-                        (By.CSS_SELECTOR, "button[title='Add to Cart']"))
-                )
-                valid_products.append(p)
-            except:
-                continue
+        valid_products = [
+            p for p in products if not p.find_elements(By.CLASS_NAME, "price-old")
+        ]
 
-        assert valid_products, "No products with 'Add to Cart' button found"
+        assert valid_products, "No products without 'price-old' class found"
 
         product = random.choice(valid_products)
+
         add_to_cart_button = product.find_element(By.CSS_SELECTOR, "button[title='Add to Cart']")
 
-        try:
-            price_old = product.find_element(By.CLASS_NAME, "price-old")
-            add_to_cart_button.click()
-        except:
-            print("Product without discount, adding to cart.")
-            browser.execute_script("arguments[0].scrollIntoView(true);", add_to_cart_button)
-            WebDriverWait(browser, 10).until(
-                EC.element_to_be_clickable(add_to_cart_button)
-            )
-            actions = ActionChains(browser)
-            actions.move_to_element(add_to_cart_button).click().perform()
+        browser.execute_script("arguments[0].click();", add_to_cart_button)
 
-            try:
-                cart_count_element = WebDriverWait(browser, 10).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, ".cart-count"))
-                )
-                cart_count = cart_count_element.text
-                assert int(cart_count) > 0, "Cart count is still zero. Item was not added."
-                print("Item added to cart.")
-            except TimeoutException:
-                try:
-                    success_message = WebDriverWait(browser, 10).until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, ".alert-success"))
-                    )
-                    assert success_message, "Success message not displayed. Item might not be added."
-                    print("Item successfully added to cart.")
-                except TimeoutException:
-                    print("Failed to confirm item was added to cart.")
+        WebDriverWait(browser, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "alert-success"))
+        )
+
+        success_message = browser.find_element(By.CLASS_NAME, "alert-success").text
+        assert "You have added" in success_message, "Product was not added to the cart successfully"
