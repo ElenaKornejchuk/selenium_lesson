@@ -8,7 +8,7 @@ from page_objects.main_page import MainPage
 from page_objects.admin_login_page import AdminLoginPage
 from page_objects.register_page import RegisterPage
 from page_objects.product_page import ProductPage
-from faker import Faker
+# from faker import Faker
 
 
 
